@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralDigit AI | Next-Gen Recognition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --bg-dark: #020617;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+        .neon-border {
+            position: relative;
+        }
+        .neon-border::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(8px);
+        }
+        #canvas {
+            cursor: crosshair;
+            touch-action: none;
+            background: #000;
+            border-radius: 16px;
+            box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        .btn-spicy {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-spicy:hover {
+            transform: scale(1.05) translateY(-2px);
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+        }
+        .btn-spicy:active { transform: scale(0.98); }
+
+        .prediction-animate {
+            animation: digit-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes digit-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+        }
+        .history-item {
+            animation: slide-in 0.3s ease-out forwards;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+        .history-item:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Header / Intro (Full Width) -->
+        <div class="lg:col-span-12 text-center mb-4">
+            <h1 class="text-6xl font-extrabold mb-4 tracking-tighter glow-text bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400">
+                NEURAL DIGIT AI
+            </h1>
+            <p class="text-slate-400 text-lg font-light max-w-2xl mx-auto">
+                Experience the power of Convolutional Neural Networks. Draw a digit and watch the AI decipher it in milliseconds.
+            </p>
+        </div>
+
+        <!-- Drawing Area -->
+        <div class="lg:col-span-5 glass p-8 rounded-3xl neon-border">
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-xs font-bold uppercase tracking-widest text-violet-400">Input Module</span>
+                <div class="flex gap-2">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse delay-75"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-150"></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center gap-8">
+                <canvas id="canvas" width="280" height="280"></canvas>
+
+                <div class="flex gap-4 w-full">
+                    <button id="clearBtn" class="flex-1 py-4 px-6 rounded-2xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all font-semibold uppercase text-xs tracking-widest">
+                        Reset
+                    </button>
+                    <button id="predictBtn" class="flex-1 btn-spicy py-4 px-6 rounded-2xl text-white font-bold uppercase text-xs tracking-widest">
+                        Run AI
+                    </button>
+                </div>
+
+                <div class="w-full pt-8 border-t border-slate-800">
+                    <p class="text-center text-xs text-slate-500 mb-4 uppercase tracking-widest">Alternative Input</p>
+                    <label class="group relative block w-full cursor-pointer">
+                        <div class="flex items-center justify-center p-4 border-2 border-dashed border-slate-700 rounded-2xl group-hover:border-violet-500 transition-colors text-slate-400 group-hover:text-violet-400">
+                            <span class="text-sm">Upload Digit Image</span>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden"/>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Result Area -->
+        <div class="lg:col-span-4 glass p-8 rounded-3xl flex flex-col items-center justify-center text-center min-h-[450px] relative overflow-hidden">
+            <div id="placeholder" class="text-slate-600">
+                <div class="text-8xl mb-6 opacity-20">🧠</div>
+                <p class="text-lg italic">Awaiting neural input...</p>
+            </div>
+
+            <div id="resultArea" class="hidden w-full relative z-10">
+                <p class="text-violet-400 uppercase tracking-widest text-xs font-black mb-4">Analysis Complete</p>
+                <div id="predictedDigit" class="text-9xl font-black text-white mb-6 prediction-animate drop-shadow-[0_0_30px_rgba(139,92,246,0.5)]">0</div>
+
+                <div class="relative w-full h-3 bg-slate-800 rounded-full overflow-hidden mb-3">
+                    <div id="confidenceBar" class="absolute left-0 top-0 h-full bg-gradient-to-r from-violet-500 to-pink-500 transition-all duration-700 ease-out" style="width: 0%"></div>
+                </div>
+                <p id="confidenceText" class="text-slate-400 font-mono text-sm uppercase tracking-tighter">Confidence: 0%</p>
+            </div>
+
+            <div id="errorArea" class="hidden text-red-400 p-4 bg-red-900/20 rounded-xl border border-red-500/30 text-sm">
+                <p id="errorMessage"></p>
+            </div>
+
+            <!-- Decorative background element -->
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl"></div>
+        </div>
+
+        <!-- Prediction History -->
+        <div class="lg:col-span-3 glass p-6 rounded-3xl flex flex-col max-h-[600px]">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                Prediction Log
+            </h3>
+            <div id="historyList" class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+                <!-- History items go here -->
+                <div class="text-slate-600 text-xs text-center py-8 italic">No history yet</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
